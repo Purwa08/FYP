@@ -9,6 +9,7 @@ import Header from './components/Header';
 import AddCourse from './pages/AddCourse';
 import CourseDetails from './pages/CourseDetails';
 import PrivateRoute from './components/PrivateRoute';
+import AddStudentPage from './pages/AddSudent';
 
 export default function App() {
     return (
@@ -30,6 +31,8 @@ export default function App() {
           <Route path="/addcourse" element={<AddCourse />} />
 
           <Route path="/course/:id" element={<CourseDetails />} />
+
+          <Route path="/add-student/:id" element={<AddStudentPage/>} />
 
           </Route>
           
