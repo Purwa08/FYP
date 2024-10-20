@@ -7,6 +7,7 @@ import authRouter from './routes/auth.route.js';
 import courseRouter from './routes/course.route.js';
 import studentRouter from './routes/student.route.js'; 
 import cookieParser from 'cookie-parser';
+import attendanceRouter from './routes/attendance.route.js'
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/courses', courseRouter);
 app.use('/api/students', studentRouter);
+app.use('/api/attendance',attendanceRouter);
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;

@@ -9,7 +9,7 @@ import Header from './components/Header';
 import AddCourse from './pages/AddCourse';
 import CourseDetails from './pages/CourseDetails';
 import PrivateRoute from './components/PrivateRoute';
-
+import TakeAttendance from './components/TakeAttendance';
 export default function App() {
     return (
       <BrowserRouter>
@@ -30,7 +30,8 @@ export default function App() {
           <Route path="/addcourse" element={<AddCourse />} />
 
           <Route path="/course/:id" element={<CourseDetails />} />
-
+          
+          <Route path="/take-attendance/:id" element={<TakeAttendance />} />
           </Route>
           
         </Routes>

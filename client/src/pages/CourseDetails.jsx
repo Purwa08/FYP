@@ -88,9 +88,14 @@ const CourseDetails = () => {
   }, [id]);
 
   // Handle navigation to take attendance page
+  // const handleTakeAttendance = () => {
+  //   navigate(`/take-attendance/${id}`);
+  // };
+
   const handleTakeAttendance = () => {
-    navigate(`/take-attendance/${id}`);
+    navigate(`/take-attendance/${id}`, { state: { courseName: course.name } });
   };
+  
 
   // Handle navigation to add student page
   const handleAddStudent = () => {
