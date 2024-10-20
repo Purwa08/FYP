@@ -2,7 +2,7 @@
 import fs from 'fs';
 import csv from 'csv-parser';
 import Student from '../models/student.model.js';
-import Course from '../models/course.model.js'; // Import the Course model
+import Course from '../models/course.model.js'; 
 
 // Import students from CSV
 export const importStudents = (req, res, next) => {
@@ -35,3 +35,60 @@ export const importStudents = (req, res, next) => {
       }
     });
 };
+
+import crypto from 'crypto'; // Import crypto module to generate random passwords
+
+// Function to generate a random password
+const generateRandomPassword = (length = 8) => {
+  return crypto.randomBytes(Math.ceil(length / 2))
+    .toString('hex') // Convert to hex string
+    .slice(0, length); // Return only the specified length
+};
+
+export const addStudentToCourse = async (req, res, next) => {
+  try {
+    const { name, email, rollno } = req.body;
+
+    // Check if the course exists
+    const course = await Course.findById(req.params.id);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Check if the student already exists
+    let student = await Student.findOne({ email });
+    
+    if (student) {
+      // If the student already exists, check if they are already enrolled in the course
+      if (student.courses.includes(course._id)) {
+        return res.status(400).json({ message: 'Student is already enrolled in this course' });
+      }
+      
+      // If not, add the new course ID to their courses array
+      student.courses.push(course._id);
+      await student.save();
+    } else {
+      // Create a new student if they do not exist
+      student = new Student({
+        name,
+        email,
+        rollno,
+        password: generateRandomPassword(), // Generate a random password
+        courses: [course._id], // Add the course ID to the courses array
+      });
+
+      await student.save();
+    }
+
+    // Add the student to the course's enrolled students
+    if (!course.enrolledStudents.includes(student._id)) {
+      course.enrolledStudents.push(student._id);
+      await course.save();
+    }
+
+    res.status(201).json({ message: 'Student added successfully', student });
+  } catch (error) {
+    next(error);
+  }
+};
+

@@ -10,6 +10,8 @@ import AddCourse from './pages/AddCourse';
 import CourseDetails from './pages/CourseDetails';
 import PrivateRoute from './components/PrivateRoute';
 import TakeAttendance from './components/TakeAttendance';
+import AddStudentPage from './pages/AddSudent';
+
 export default function App() {
     return (
       <BrowserRouter>
@@ -32,6 +34,9 @@ export default function App() {
           <Route path="/course/:id" element={<CourseDetails />} />
           
           <Route path="/take-attendance/:id" element={<TakeAttendance />} />
+
+          <Route path="/add-student/:id" element={<AddStudentPage/>} />
+
           </Route>
           
         </Routes>

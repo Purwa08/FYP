@@ -52,30 +52,30 @@ export const getCourseDetails = async (req, res, next) => {
   }
 };
 
-// Add a student to a course
-export const addStudentToCourse = async (req, res, next) => {
-  try {
-    const { studentId, courseId } = req.body; // Expecting studentId and courseId in the request body
-    const course = await Course.findById(courseId);
-    const student = await Student.findById(studentId);
+// // Add a student to a course
+// export const addStudentToCourse = async (req, res, next) => {
+//   try {
+//     const { studentId, courseId } = req.body; // Expecting studentId and courseId in the request body
+//     const course = await Course.findById(courseId);
+//     const student = await Student.findById(studentId);
 
-    if (!course || !student) {
-      return res.status(404).json({ message: 'Course or Student not found' });
-    }
+//     if (!course || !student) {
+//       return res.status(404).json({ message: 'Course or Student not found' });
+//     }
 
-    // Add student to course's enrolledStudents array
-    course.enrolledStudents.push(studentId);
-    await course.save();
+//     // Add student to course's enrolledStudents array
+//     course.enrolledStudents.push(studentId);
+//     await course.save();
 
-    // Optionally, add the course to the student's courses array
-    student.courses.push(courseId);
-    await student.save();
+//     // Optionally, add the course to the student's courses array
+//     student.courses.push(courseId);
+//     await student.save();
 
-    res.status(200).json({ message: 'Student added to course successfully' });
-  } catch (err) {
-    next(err);
-  }
-};
+//     res.status(200).json({ message: 'Student added to course successfully' });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
 
 // Example: Mark attendance for a course
 export const markAttendance = async (req, res, next) => {
