@@ -1,57 +1,3 @@
-// import { useEffect, useState } from 'react';
-// import { useParams } from 'react-router-dom';
-
-// export default function CourseDetails() {
-//   const { courseId } = useParams(); // Get courseId from the URL
-//   const [course, setCourse] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-
-//   // Function to fetch course details
-//   const fetchCourseDetails = async () => {
-//     try {
-//       const res = await fetch(`/api/courses/${courseId}`, { credentials: 'include' });
-//       if (!res.ok) {
-//         throw new Error('Failed to fetch course details');
-//       }
-//       const data = await res.json();
-//       setCourse(data); // Assuming your API returns the course details directly
-//       setLoading(false);
-//     } catch (error) {
-//       setError(error.message);
-//       setLoading(false);
-//     }
-//   };
-
-//   // Effect to fetch course details on component mount
-//   useEffect(() => {
-//     fetchCourseDetails();
-//   }, [courseId]);
-
-//   return (
-//     <div className='p-4'>
-//       {loading ? (
-//         <p>Loading course details...</p>
-//       ) : error ? (
-//         <p className='text-red-500'>{error}</p>
-//       ) : (
-//         <div>
-//           <h1 className='text-2xl font-semibold'>{course.title}</h1>
-//           <p>{course.description}</p>
-//           {/* You can also display other details like students, assignments, etc. */}
-//           <ul>
-//             {course.students?.map((student) => (
-//               <li key={student._id}>{student.name}</li>
-//             ))}
-//           </ul>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -70,9 +16,6 @@ const CourseDetails = () => {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        // headers: {
-        //   'Authorization': `Bearer ${localStorage.getItem('token')}`, // Ensure you have the token saved
-        // },
       });
       const data = await res.json();
       setCourse(data);
@@ -161,77 +104,212 @@ export default CourseDetails;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 // import React, { useEffect, useState } from 'react';
-// import { useParams } from 'react-router-dom';
-// import axios from 'axios';
+// import { useParams, useNavigate } from 'react-router-dom';
+// import { Bar } from 'react-chartjs-2'; // For the bar chart
+// import 'react-calendar/dist/Calendar.css'; // If using react-calendar
+// import Calendar from 'react-calendar';
 
 // const CourseDetails = () => {
-//   const params = useParams();
+//   const { id } = useParams();
 //   const [course, setCourse] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState('');
+//   const [attendanceStats, setAttendanceStats] = useState([]);
+//   const [students, setStudents] = useState([]);
+//   const [lowAttendance, setLowAttendance] = useState([]);
+//   const navigate = useNavigate();
+
+//   // Fetch course details and attendance stats
+//   const fetchCourseDetails = async () => {
+//     try {
+//       const res = await fetch(`/api/courses/course/${id}`, {
+//         method: 'GET',
+//         headers: {
+//           'Content-Type': 'application/json',
+//         },
+//         credentials: 'include',
+//       });
+//       const data = await res.json();
+//       setCourse(data);
+//       setAttendanceStats(data.attendanceStats || []);
+//     } catch (error) {
+//       console.error('Error fetching course details:', error);
+//     }
+//   };
+
+//   // Fetch students for the course
+//   const fetchStudents = async () => {
+//     try {
+//       const res = await fetch(`/api/attendance/course/${id}/students`, {
+//         method: 'GET',
+//         headers: {
+//           'Content-Type': 'application/json',
+//         },
+//         credentials: 'include',
+//       });
+//       const data = await res.json();
+//       setStudents(data.students || []);
+//       setLowAttendance(data.students.filter(student => student.attendancePercentage < 75)); // Customize this percentage as needed
+//     } catch (error) {
+//       console.error('Error fetching students:', error);
+//     }
+//   };
 
 //   useEffect(() => {
-//     const fetchCourseDetails = async () => {
-//       try {
-//         const response = await axios.get(`/api/courses/course/${params.id}`);
-//         setCourse(response.data);
-//       } catch (err) {
-//         setError(err.message);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
 //     fetchCourseDetails();
-//   }, [params.id]);
+//     fetchStudents();
+//   }, [id]);
 
-//   // Check if the course data is still loading
-//   if (loading) {
-//     return <div>Loading...</div>;
-//   }
+//   // Prepare data for attendance statistics chart
+//   const attendanceChartData = {
+//     labels: attendanceStats.map(stat => stat.date), // Dates of attendance
+//     datasets: [
+//       {
+//         label: 'Present',
+//         backgroundColor: '#4caf50', // Green for present
+//         data: attendanceStats.map(stat => stat.present),
+//       },
+//       {
+//         label: 'Absent',
+//         backgroundColor: '#f44336', // Red for absent
+//         data: attendanceStats.map(stat => stat.absent),
+//       },
+//     ],
+//   };
 
-//   // Check for errors
-//   if (error) {
-//     return <div>{error}</div>;
-//   }
+//   // Function to navigate to the attendance page
+//   const handleTakeAttendance = () => {
+//     navigate(`/take-attendance/${id}`, { state: { courseName: course.name } });
+//   };
 
-//   // Check if the course was not found
+//   // Function to navigate to add students page
+//   const handleAddStudent = () => {
+//     navigate(`/add-student/${id}`);
+//   };
+
 //   if (!course) {
-//     return <div>No course found.</div>;
-//   }
-
-//   // Check if geofence details are available
-//   const { geofence } = course;
-//   if (!geofence) {
-//     return <div>Geofence details are not available.</div>;
+//     return <div className="text-center">Loading...</div>;
 //   }
 
 //   return (
-//     <div>
-//       <h1>{course.name}</h1>
-//       <p>Description: {course.description}</p>
-//       <p>Code: {course.code}</p>
+//     <div className="max-w-7xl mx-auto p-5">
+//       <h1 className="text-3xl font-bold text-center mb-8">{course.name}</h1>
+      
+//       {/* Course details */}
+//       <div className="mb-5">
+//         <h2 className="text-xl font-semibold">Course Code: {course.code}</h2>
+//         <p className="text-gray-600">{course.description}</p>
+//       </div>
 
-//       {/* Geofence Details */}
-//       <h2>Geofence Details</h2>
-//       <p>Latitude: {geofence.latitude !== undefined ? geofence.latitude : 'N/A'}</p>
-//       <p>Longitude: {geofence.longitude !== undefined ? geofence.longitude : 'N/A'}</p>
-//       <p>Radius: {geofence.radius !== undefined ? geofence.radius : 'N/A'} meters</p>
+//       {/* Attendance stats graph */}
+//       <div className="mb-8">
+//         <h2 className="text-lg font-semibold mb-3">Attendance Statistics</h2>
+//         {attendanceStats.length > 0 ? (
+//           <div className="bg-white p-4 shadow-md rounded-md">
+//             <Bar data={attendanceChartData} />
+//           </div>
+//         ) : (
+//           <p>No attendance records available.</p>
+//         )}
+//       </div>
 
-//       {/* Attendance Statistics Section */}
-//       <h2>Attendance Statistics</h2>
-//       {/* You can add logic here to display attendance statistics */}
+//       {/* Low attendance students */}
+//       <div className="mb-8">
+//         <h2 className="text-lg font-semibold mb-3">Students with Low Attendance</h2>
+//         {lowAttendance.length > 0 ? (
+//           <table className="min-w-full border-collapse border border-gray-200">
+//             <thead>
+//               <tr className="bg-gray-100">
+//                 <th className="border border-gray-300 px-4 py-2 text-left">Roll No</th>
+//                 <th className="border border-gray-300 px-4 py-2 text-left">Name</th>
+//                 <th className="border border-gray-300 px-4 py-2 text-left">Attendance %</th>
+//               </tr>
+//             </thead>
+//             <tbody>
+//               {lowAttendance.map((student, index) => (
+//                 <tr key={index} className="bg-white hover:bg-gray-100">
+//                   <td className="border border-gray-300 px-4 py-2">{student.rollNo}</td>
+//                   <td className="border border-gray-300 px-4 py-2">{student.name}</td>
+//                   <td className="border border-gray-300 px-4 py-2">{student.attendancePercentage}%</td>
+//                 </tr>
+//               ))}
+//             </tbody>
+//           </table>
+//         ) : (
+//           <p>All students have sufficient attendance.</p>
+//         )}
+//       </div>
 
-//       {/* Action Buttons */}
-//       <button onClick={() => {/* Navigate to attendance page */}}>
-//         Take Attendance
-//       </button>
-//       <button onClick={() => {/* Navigate to add student page */}}>
-//         Add Student Manually
-//       </button>
+//       {/* Calendar to mark attendance */}
+//       <div className="mb-8">
+//         <h2 className="text-lg font-semibold mb-3">Attendance Calendar</h2>
+//         <div className="bg-white p-4 shadow-md rounded-md">
+//           <Calendar 
+//             tileClassName={({ date, view }) => {
+//               // Add custom styles for attendance dates
+//               const dateStr = date.toISOString().split('T')[0]; // Convert date to 'YYYY-MM-DD'
+//               const attendanceOnDate = attendanceStats.find(stat => stat.date === dateStr);
+//               return attendanceOnDate ? 'bg-green-200' : ''; // Highlight the dates with attendance
+//             }}
+//           />
+//         </div>
+//       </div>
+
+//       {/* Student List */}
+//       <div className="mb-5">
+//         <h2 className="text-lg font-semibold">Student List</h2>
+//         {students.length > 0 ? (
+//           <table className="min-w-full border-collapse border border-gray-200">
+//             <thead>
+//               <tr className="bg-gray-100">
+//                 <th className="border border-gray-300 px-4 py-2 text-left">Roll No</th>
+//                 <th className="border border-gray-300 px-4 py-2 text-left">Name</th>
+//               </tr>
+//             </thead>
+//             <tbody>
+//               {students.map((student, index) => (
+//                 <tr key={index} className="bg-white hover:bg-gray-100">
+//                   <td className="border border-gray-300 px-4 py-2">{student.rollno}</td>
+//                   <td className="border border-gray-300 px-4 py-2">{student.name}</td>
+//                 </tr>
+//               ))}
+//             </tbody>
+//           </table>
+//         ) : (
+//           <p>No students found for this course.</p>
+//         )}
+//       </div>
+
+//       {/* Action buttons */}
+//       <div className="flex justify-between mt-8">
+//         <button
+//           onClick={handleTakeAttendance}
+//           className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+//         >
+//           Take Attendance
+//         </button>
+//         <button
+//           onClick={handleAddStudent}
+//           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+//         >
+//           Add Student Manually
+//         </button>
+//       </div>
 //     </div>
 //   );
 // };
 
 // export default CourseDetails;
+

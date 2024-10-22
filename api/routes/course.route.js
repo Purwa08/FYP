@@ -1,5 +1,5 @@
 import express from 'express';
-import { getCourses, addCourse, getCourseDetails, } from '../controllers/course.controller.js';
+import { getCourses, addCourse, getCourseDetails } from '../controllers/course.controller.js';
 import { addStudentToCourse } from '../controllers/student.controller.js';
 import { verifyToken } from '../utils/verifyUser.js'; // Assuming you have auth middleware
 
@@ -16,10 +16,6 @@ router.get('/course/:id', verifyToken, getCourseDetails); // Updated to fetch co
 
 // Route to manually add a student to a course
 router.post('/course/:id/add-student', verifyToken, addStudentToCourse);
-// // Route to add a student to a course
-// router.post('/addstudent', verifyToken, addStudentToCourse); // New route for adding students
 
-// Route to mark attendance for a course
-//router.post('/mark-attendance', verifyToken, markAttendance); // New route for marking attendance
 
 export default router;

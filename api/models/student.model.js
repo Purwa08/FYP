@@ -39,6 +39,11 @@ const studentSchema = new mongoose.Schema(
           ref: 'Course', // Reference to the course for which attendance is marked
         },
       }],
+      attendancePercentage: { // NEW FIELD
+        type: Map,
+        of: Number, // key: courseId, value: percentage
+        default: {},
+      }
     },
     {
       timestamps: true,

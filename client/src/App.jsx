@@ -9,7 +9,7 @@ import Header from './components/Header';
 import AddCourse from './pages/AddCourse';
 import CourseDetails from './pages/CourseDetails';
 import PrivateRoute from './components/PrivateRoute';
-import TakeAttendance from './components/TakeAttendance';
+import TakeAttendance from './pages/TakeAttendance';
 import AddStudentPage from './pages/AddSudent';
 
 export default function App() {

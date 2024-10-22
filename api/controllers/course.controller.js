@@ -78,19 +78,19 @@ export const getCourseDetails = async (req, res, next) => {
 // };
 
 // Example: Mark attendance for a course
-export const markAttendance = async (req, res, next) => {
-  try {
-    const { courseId, studentId, status } = req.body; // Expecting courseId, studentId, and status in request body
-    const attendanceRecord = new Attendance({
-      courseId,
-      studentId,
-      date: new Date(),
-      status,
-    });
+// export const markAttendance = async (req, res, next) => {
+//   try {
+//     const { courseId, studentId, status } = req.body; // Expecting courseId, studentId, and status in request body
+//     const attendanceRecord = new Attendance({
+//       courseId,
+//       studentId,
+//       date: new Date(),
+//       status,
+//     });
 
-    await attendanceRecord.save();
-    res.status(201).json(attendanceRecord);
-  } catch (err) {
-    next(err);
-  }
-};
+//     await attendanceRecord.save();
+//     res.status(201).json(attendanceRecord);
+//   } catch (err) {
+//     next(err);
+//   }
+// };

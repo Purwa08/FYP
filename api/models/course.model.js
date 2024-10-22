@@ -1,5 +1,28 @@
 import mongoose from 'mongoose';
 
+const AttendanceStatSchema = new mongoose.Schema({
+  date: { 
+    type: Date, 
+    required: true 
+  },
+  present: { 
+    type: Number, 
+    required: true 
+  },
+  absent: { 
+    type: Number, 
+    required: true 
+  },
+  totalClassesHeld: { 
+    type: Number, 
+    default: 0 
+  },
+  attendancePercentage: { 
+    type: Number, 
+    default: 0 
+  },
+});
+
 const courseSchema = new mongoose.Schema(
   {
     name: {
@@ -39,6 +62,7 @@ const courseSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Student',
     }],
+    attendanceStats: [AttendanceStatSchema]
   },
   
   {

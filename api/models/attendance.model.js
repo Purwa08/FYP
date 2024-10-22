@@ -15,13 +15,18 @@ const AttendanceSchema = new mongoose.Schema({
     {
       studentId: { 
         type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Student', required: true },
+        ref: 'Student', 
+        required: true },
       status: { 
         type: String, 
         enum: ['present', 'absent'], 
         required: true },
     },
   ],
+  isWindowOpen: { // Flag to indicate if the attendance window is open
+    type: Boolean,
+    default: false
+  }
 });
 
 const Attendance = mongoose.model('Attendance', AttendanceSchema);

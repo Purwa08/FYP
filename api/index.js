@@ -6,8 +6,8 @@ import userRouter from './routes/user.route.js';
 import authRouter from './routes/auth.route.js';
 import courseRouter from './routes/course.route.js';
 import studentRouter from './routes/student.route.js'; 
-import cookieParser from 'cookie-parser';
 import attendanceRouter from './routes/attendance.route.js'
+import cookieParser from 'cookie-parser';
 
 dotenv.config();
 
