@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
- import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 const TakeAttendance = () => {
   const { id } = useParams();
-  console.log("course id is: ",id);
+  console.log("course id is: ", id);
   const [students, setStudents] = useState([]);
   const [attendanceWindowOpen, setAttendanceWindowOpen] = useState(false);
   const [attendanceData, setAttendanceData] = useState({});
@@ -38,10 +38,6 @@ const TakeAttendance = () => {
       const endpoint = attendanceWindowOpen ? 'close-attendance' : 'start-attendance';
       const response = await fetch(`/api/attendance/course/${id}/${endpoint}`, {
         method: 'POST',
-        // headers: {
-        //     'Content-Type': 'application/json', // Ensure the content type is set
-        //   },
-        //   body: JSON.stringify({ date: new Date() }),
       });
       if (response.ok) {
         setAttendanceWindowOpen(!attendanceWindowOpen);
@@ -98,39 +94,53 @@ const TakeAttendance = () => {
 
       <div className="bg-white shadow-md rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-4">Students List</h2>
-        <ul>
-          {students.length === 0 ? (
-            <p>No students registered for this course yet.</p>
-          ) : (
-            students.map(student => (
-              <li key={student._id} className="flex justify-between items-center mb-3">
-                <span className="text-lg">{student.name}</span>
-                <div className="flex space-x-4">
-                  <label>
-                    <input
-                      type="radio"
-                      name={student._id}
-                      onChange={() => handleAttendanceChange(student._id, 'present')}
-                      disabled={!attendanceWindowOpen}
-                      className="mr-1"
-                    />
-                    Present
-                  </label>
-                  <label>
-                    <input
-                      type="radio"
-                      name={student._id}
-                      onChange={() => handleAttendanceChange(student._id, 'absent')}
-                      disabled={!attendanceWindowOpen}
-                      className="mr-1"
-                    />
-                    Absent
-                  </label>
-                </div>
-              </li>
-            ))
-          )}
-        </ul>
+        <table className="min-w-full bg-white">
+          <thead>
+            <tr className="bg-gray-200">
+              <th className="py-2 px-4 border text-left">Student Name</th>
+              <th className="py-2 px-4 border text-left">Roll No</th>
+              <th className="py-2 px-4 border text-left">Attendance</th>
+            </tr>
+          </thead>
+          <tbody>
+            {students.length === 0 ? (
+              <tr>
+                <td colSpan="3" className="text-center py-2">No students registered for this course yet.</td>
+              </tr>
+            ) : (
+              students.map(student => (
+                <tr key={student._id} className="border-b">
+                  <td className="py-2 px-4">{student.name}</td>
+                  <td className="py-2 px-4">{student.rollno}</td>
+                  <td className="py-2 px-4">
+                    <div className="flex space-x-2">
+                      <label>
+                        <input
+                          type="radio"
+                          name={student._id}
+                          onChange={() => handleAttendanceChange(student._id, 'present')}
+                          disabled={!attendanceWindowOpen}
+                          className="mr-1"
+                        />
+                        Present
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name={student._id}
+                          onChange={() => handleAttendanceChange(student._id, 'absent')}
+                          disabled={!attendanceWindowOpen}
+                          className="mr-1"
+                        />
+                        Absent
+                      </label>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
       <button
