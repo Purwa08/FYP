@@ -1,49 +1,15 @@
-// controllers/student.controller.js
-import fs from 'fs';
-import csv from 'csv-parser';
 import Student from '../models/student.model.js';
 import Course from '../models/course.model.js'; 
-
-// Import students from CSV
-export const importStudents = (req, res, next) => {
-  const courseId = req.params.id; // Get the course ID from the URL parameter
-  const results = [];
-
-  // Create a read stream for the uploaded file
-  fs.createReadStream(req.file.path)
-    .pipe(csv())
-    .on('data', (data) => results.push(data)) // Push each row into the results array
-    .on('end', async () => {
-      try {
-        const studentPromises = results.map(async (studentData) => {
-          const { name, email, studentId } = studentData; // Destructure student data
-          const newStudent = new Student({ name, email, studentId });
-          await newStudent.save(); // Save the new student to the database
-          return newStudent._id; // Return the new student's ID
-        });
-
-        const studentIds = await Promise.all(studentPromises);
-        
-        // Associate students with the course
-        await Course.findByIdAndUpdate(courseId, { $addToSet: { enrolledStudents: { $each: studentIds } } });
-
-        res.status(200).json({ message: 'Students imported successfully!', students: studentIds });
-      } catch (error) {
-        next(error);
-      } finally {
-        fs.unlinkSync(req.file.path); // Remove the uploaded file after processing
-      }
-    });
-};
-
+import { generateRandomPassword } from '../utils/password.js';
+import XLSX from 'xlsx';
 import crypto from 'crypto'; // Import crypto module to generate random passwords
 
 // Function to generate a random password
-const generateRandomPassword = (length = 8) => {
-  return crypto.randomBytes(Math.ceil(length / 2))
-    .toString('hex') // Convert to hex string
-    .slice(0, length); // Return only the specified length
-};
+// const generateRandomPassword = (length = 8) => {
+//   return crypto.randomBytes(Math.ceil(length / 2))
+//     .toString('hex') // Convert to hex string
+//     .slice(0, length); // Return only the specified length
+// };
 
 export const addStudentToCourse = async (req, res, next) => {
   try {
@@ -92,3 +58,92 @@ export const addStudentToCourse = async (req, res, next) => {
   }
 };
 
+
+
+const columnMapping = {
+  name: ['Name', 'name', 'NAME', 'Student Name'],
+  email: ['Email', 'email', 'EMAIL'],
+  rollno: ['Roll No', 'rollno', 'Roll Number', 'ROLLNO'],
+};
+
+const normalizeColumns = (data) => {
+  const normalizedData = [];
+
+  for (const row of data) {
+    const normalizedRow = {};
+    for (const key in row) {
+      const normalizedKey = Object.keys(columnMapping).find((field) =>
+        columnMapping[field].includes(key)
+      );
+
+      if (normalizedKey) {
+        normalizedRow[normalizedKey] = row[key]; // Map the key to the normalized name
+      }
+    }
+    normalizedData.push(normalizedRow);
+  }
+
+  return normalizedData;
+};
+
+export const handleFileUpload = async (req, res, next) => {
+  try {
+    const filePath = req.file.path;
+
+    // Read Excel file and parse it
+    const workbook = XLSX.readFile(filePath);
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    const studentData = XLSX.utils.sheet_to_json(worksheet);
+
+    // Normalize columns
+    const normalizedData = normalizeColumns(studentData);
+
+    // Check if the course exists
+    const course = await Course.findById(req.params.id);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    for (const row of normalizedData) {
+      const { name, email, rollno } = row;
+
+      // Validate required fields
+      if (!name || !email || !rollno) {
+        errors.push(`Missing data for student: ${JSON.stringify(row)}`);
+        continue; // Skip this row if required data is missing
+      }
+
+      // Check if the student already exists
+      let student = await Student.findOne({ email });
+
+      if (student) {
+        // If student exists, ensure course is in their courses array
+        if (!student.courses.includes(course._id)) {
+          student.courses.push(course._id);
+          await student.save();
+        }
+      } else {
+        // If student does not exist, create a new student with random password
+        const password = generateRandomPassword();
+        student = new Student({
+          name,
+          email,
+          rollno,
+          password,
+          courses: [course._id],
+        });
+        await student.save();
+      }
+
+      // Add student to course's enrolled students if not already present
+      if (!course.enrolledStudents.includes(student._id)) {
+        course.enrolledStudents.push(student._id);
+      }
+    }
+
+    await course.save();
+    res.status(200).json({ message: 'Students added successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
