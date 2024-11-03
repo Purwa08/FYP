@@ -4,7 +4,8 @@ import {
   closeAttendance,
   markAttendance,
   getAttendanceRecords,
-  getStudentsByCourse
+  getStudentsByCourse,
+  getAttendanceByDate
 } from '../controllers/attendance.controller.js';
 import { verifyToken } from '../utils/verifyUser.js'; // Assuming you have auth middleware
 
@@ -24,5 +25,12 @@ router.get('/course/:courseId/attendance', verifyToken, getAttendanceRecords);
 
 // Fetch students enrolled in a specific course
 router.get('/course/:courseId/students', verifyToken,  getStudentsByCourse);
+
+
+// Route to get attendance records for a specific course on a particular date
+router.get('/course/:courseId/date/:date', verifyToken, getAttendanceByDate);
+
+
+
 
 export default router;

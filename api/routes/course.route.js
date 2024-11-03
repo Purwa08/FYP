@@ -9,6 +9,7 @@ const router = express.Router();
 // Route to get all courses for a specific faculty
 router.get('/getcourses', verifyToken, getCourses);
 
+
 // Route to add a new course
 router.post('/addcourse', verifyToken, addCourse);
 

@@ -209,3 +209,49 @@ export const markAttendance = async (req, res, next) => {
     next(error);
   }
 };
+
+
+
+
+
+
+export const getAttendanceByDate = async (req, res) => {
+  const { courseId, date } = req.params;
+  console.log(`Received request for attendance on date: ${date}`);
+
+  try {
+    const selectedDate = new Date(date);
+    
+    // Find students with attendance records matching the course and date
+    const students = await Student.find({
+      attendance: {
+        $elemMatch: {
+          courseId,
+          date: { $eq: selectedDate },
+        },
+      },
+    }).select('name rollno attendance');
+
+    // Separate students into present and absent lists
+    const presentStudents = [];
+    const absentStudents = [];
+
+    students.forEach(student => {
+      const attendanceRecord = student.attendance.find(
+        record => 
+          record.courseId.toString() === courseId && 
+          record.date.toISOString() === selectedDate.toISOString()
+      );
+
+      if (attendanceRecord.status === 'present') {
+        presentStudents.push(student);
+      } else {
+        absentStudents.push(student);
+      }
+    });
+
+    res.json({ present: presentStudents, absent: absentStudents });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching attendance data', error });
+  }
+};
