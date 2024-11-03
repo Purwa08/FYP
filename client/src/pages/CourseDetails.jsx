@@ -186,6 +186,33 @@ const CourseDetails = () => {
     navigate(`/add-student/${id}`);
   };
 
+
+   // Handle CSV download
+   const handleDownloadCSV = async () => {
+    try {
+      const response = await fetch(`/api/courses/course/${id}/download-student-list`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'text/csv' },
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'students_list.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        console.error('Failed to download CSV');
+      }
+    } catch (error) {
+      console.error('Error downloading CSV:', error);
+    }
+  };
+
   // Chart data and options for attendance statistics
   const attendanceChartData = {
     labels: attendanceStats.map((stat) => stat.date),
@@ -404,6 +431,16 @@ const CourseDetails = () => {
                 })}
               </tbody>
             </table>
+            {students.length > 0 && (
+              <div className="mt-4 flex justify-center">
+                <button
+                  onClick={handleDownloadCSV}
+                  className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+                >
+                  Download Student List
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -421,6 +458,12 @@ const CourseDetails = () => {
         >
           Add Students
         </button>
+        {/* <button
+          onClick={handleDownloadCSV}
+          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+        >
+          Download Student List
+        </button> */}
       </div>
     </div>
   );
