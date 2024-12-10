@@ -97,3 +97,37 @@ export const downloadStudentList = async (req, res, next) => {
 };
 
 
+
+
+
+export const getStudentCourses = async (req, res) => {
+  const { studentId } = req.params;
+
+  try {
+    // Find the student and populate courses
+    const student = await Student.findById(studentId).populate('courses');
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    // Prepare the courses list to send as a response
+    const coursesList = student.courses.map((course) => ({
+      courseID: course._id, // ObjectId for consistency
+      courseName: course.name,
+      courseCode: course.code,
+      description: course.description,
+    }));
+
+    // Send the response with courses list
+    res.status(200).json({
+      studentName: student.name,
+      rollno: student.rollno,
+      email: student.email,
+      courses: coursesList,
+    });
+  } catch (error) {
+    console.error('Error fetching student courses:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

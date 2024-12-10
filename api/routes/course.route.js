@@ -1,5 +1,5 @@
 import express from 'express';
-import { getCourses, addCourse, getCourseDetails, downloadStudentList} from '../controllers/course.controller.js';
+import { getCourses, addCourse, getCourseDetails, downloadStudentList, getStudentCourses} from '../controllers/course.controller.js';
 import { addStudentToCourse, handleFileUpload } from '../controllers/student.controller.js';
 import { verifyToken } from '../utils/verifyUser.js';
 import upload from '../middlewares/upload.js';
@@ -24,5 +24,8 @@ router.post('/course/:id/import-students', upload.single('file'), handleFileUplo
 
 // Route to download the student list as a CSV
 router.get('/course/:id/download-student-list', verifyToken, downloadStudentList);
+
+// Define the route to get courses of a student
+router.get('/student/:studentId/courses',  getStudentCourses);
 
 export default router;

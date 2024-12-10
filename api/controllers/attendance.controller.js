@@ -255,3 +255,95 @@ export const getAttendanceByDate = async (req, res) => {
     res.status(500).json({ message: 'Error fetching attendance data', error });
   }
 };
+
+
+
+
+
+
+// export const getAttendanceSummary = async (req, res) => {
+//   const { studentId } = req.params;
+
+//   try {
+//     // Find the student and populate courses
+//     const student = await Student.findById(studentId).populate('courses');
+
+//     if (!student) {
+//       return res.status(404).json({ message: 'Student not found' });
+//     }
+
+//     // Generate attendance summary for each course
+//     const attendanceSummary = student.courses.map((course) => {
+//       const courseId = course._id.toString();
+//       return {
+//         courseID: course.courseId,
+//         courseName: course.name,
+//         courseCode: course.code,
+//         description: course.description,
+//         attendancePercentage: student.attendancePercentage[courseId] || 0,
+//         attendanceRecords: student.attendance
+//           .filter((record) => record.courseId.toString() === courseId)
+//           .map((record) => ({
+//             date: record.date,
+//             status: record.status,
+//           })),
+//       };
+//     });
+
+//     // Response with student details and attendance summary
+//     res.status(200).json({
+//       studentName: student.name,
+//       rollno: student.rollno,
+//       email: student.email,
+//       attendanceSummary,
+//     });
+//   } catch (error) {
+//     console.error('Error fetching attendance summary:', error.message);
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// };
+
+
+
+
+export const getAttendanceSummary = async (req, res) => {
+  const { studentId } = req.params;
+
+  try {
+    // Find the student and populate courses
+    const student = await Student.findById(studentId).populate('courses');
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    // Generate attendance summary for each course
+    const attendanceSummary = student.courses.map((course) => {
+      const courseId = course._id.toString();
+      return {
+        courseID: course._id, // Use ObjectId directly for consistency
+        courseName: course.name,
+        courseCode: course.code,
+        description: course.description,
+        attendancePercentage: student.attendancePercentage.get(courseId) || 0, // Fetch attendance percentage from Map
+        attendanceRecords: student.attendance
+          .filter((record) => record.courseId.toString() === courseId)
+          .map((record) => ({
+            date: record.date,
+            status: record.status,
+          })),
+      };
+    });
+
+    // Response with student details and attendance summary
+    res.status(200).json({
+      studentName: student.name,
+      rollno: student.rollno,
+      email: student.email,
+      attendanceSummary,
+    });
+  } catch (error) {
+    console.error('Error fetching attendance summary:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

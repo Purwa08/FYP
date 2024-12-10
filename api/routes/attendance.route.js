@@ -5,7 +5,8 @@ import {
   markAttendance,
   getAttendanceRecords,
   getStudentsByCourse,
-  getAttendanceByDate
+  getAttendanceByDate,
+  getAttendanceSummary
 } from '../controllers/attendance.controller.js';
 import { verifyToken } from '../utils/verifyUser.js'; // Assuming you have auth middleware
 
@@ -31,6 +32,8 @@ router.get('/course/:courseId/students', verifyToken,  getStudentsByCourse);
 router.get('/course/:courseId/date/:date', verifyToken, getAttendanceByDate);
 
 
+// Route for fetching attendance summary of a student
+router.get('/student/:studentId', getAttendanceSummary);
 
 
 export default router;
