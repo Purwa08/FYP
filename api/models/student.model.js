@@ -15,6 +15,10 @@ const studentSchema = new mongoose.Schema(
         type: String,
         required: true, // Required for logging in
       },
+      firstLogin: { 
+        type: Boolean, 
+        default: true 
+      },
       rollno:{
         type: String,
         required: true,
@@ -52,4 +56,3 @@ const studentSchema = new mongoose.Schema(
   
   const Student = mongoose.model('Student', studentSchema);
   export default Student;
-  

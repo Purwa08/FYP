@@ -347,3 +347,230 @@ export const getAttendanceSummary = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+
+
+
+// Check if attendance window is open for a specific course and date
+export const isAttendanceWindowOpen = async (req, res, next) => {
+  const { courseId } = req.params;
+  const { studentId } = req.query;
+
+  try {
+    const today = new Date().toISOString().split('T')[0]; // Get today's date (YYYY-MM-DD)
+    const attendance = await Attendance.findOne({ courseId, date: today }); // Find attendance record for the course and today
+
+    if (!attendance) {
+      return res.status(404).json({ 
+        isWindowOpen: false ,
+        isAttendanceMarked: false,
+        message: 'Attendance record not found for today.' });
+    }
+
+    // Check if the student has already marked attendance
+    const isAttendanceMarked = attendance.students.some(
+      (record) => record.studentId.toString() === studentId
+    );
+
+    // Return the status of the attendance window and whether attendance is marked
+    res.status(200).json({
+      isWindowOpen: attendance.isWindowOpen,
+      isAttendanceMarked,
+    });
+
+    // Return the status of the attendance window
+    //res.status(200).json({ isWindowOpen: attendance.isWindowOpen });
+  } catch (error) {
+    console.error('Error checking attendance window:', error.message);
+    next(error);
+  }
+};
+
+
+
+// Controller for students to mark their attendance
+export const markAttendanceByStudent = async (req, res, next) => {
+  const { courseId } = req.params;
+  const { studentId } = req.body; // Student ID passed in the request body (can also come from token)
+  const today = new Date().toISOString().split("T")[0]; // Current date in YYYY-MM-DD format
+
+  try {
+    // Step 1: Check if the course exists
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return next(errorHandler(404, "Course not found."));
+    }
+
+    // Step 2: Check if the student is enrolled in the course
+    const isEnrolled = course.enrolledStudents.some(
+      (id) => id.toString() === studentId
+    );
+    if (!isEnrolled) {
+      return next(errorHandler(403, "You are not enrolled in this course."));
+    }
+
+    // Step 3: Check if attendance window is open for the course today
+    let attendance = await Attendance.findOne({ courseId, date: today });
+    if (!attendance || !attendance.isWindowOpen) {
+      return next(errorHandler(400, "Attendance window is closed."));
+    }
+
+    // Step 4: Check if the student has already marked attendance for today
+    const alreadyMarked = attendance.students.some(
+      (record) => record.studentId.toString() === studentId
+    );
+    if (alreadyMarked) {
+      return next(errorHandler(400, "You have already marked attendance."));
+    }
+
+    // Step 5: Mark the student as present
+    attendance.students.push({
+      studentId,
+      status: "present",
+    });
+    await attendance.save();
+
+    //step course model update
+    // Update the course model attendance stats
+    const existingStat = course.attendanceStats.find(
+      (stat) => stat.date.toISOString().split('T')[0] === today
+    );
+
+    if (existingStat) {
+      // Update existing stats for the date
+       existingStat.present += 1;
+      
+    } else {
+      // Create new stats entry for the date
+      const totalClassesHeld = course.attendanceStats.length
+        ? course.attendanceStats[course.attendanceStats.length - 1].totalClassesHeld + 1
+        : 1;
+      const presentCount = 1;
+      const absentCount=0;
+      //const presentCount = status === 'present' ? 1 : 0;
+      //const absentCount = status === 'absent' ? 1 : 0;
+      const attendancePercentage = ((presentCount / totalClassesHeld) * 100).toFixed(2);
+
+      course.attendanceStats.push({
+        date: today,
+        present: presentCount,
+        absent: absentCount,
+        totalClassesHeld,
+        attendancePercentage,
+      });
+    }
+    await course.save();
+
+    // Step 6: Update the student's attendance record
+    const student = await Student.findById(studentId);
+    const existingRecord = student.attendance.find(
+      (record) =>
+        record.date.toISOString().split("T")[0] === today &&
+        record.courseId.toString() === courseId
+    );
+
+    if (!existingRecord) {
+      student.attendance.push({
+        date: today,
+        courseId,
+        status: "present",
+      });
+    }
+    else {
+      // Update existing attendance entry
+      existingRecord.status = "present";
+    }
+
+    // Step 7: Update the student's attendance percentage for the course
+    const totalAttendanceForCourse = student.attendance.filter(
+      (record) => record.courseId.toString() === courseId
+    ).length;
+
+    const totalPresentForCourse = student.attendance.filter(
+      (record) =>
+        record.courseId.toString() === courseId && record.status === "present"
+    ).length;
+
+    const attendancePercentage = (
+      (totalPresentForCourse / totalAttendanceForCourse) *
+      100
+    ).toFixed(2);
+
+    student.attendancePercentage.set(courseId, attendancePercentage);
+    await student.save();
+
+    res
+      .status(200)
+      .json({ message: "Attendance marked successfully.", attendance });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
+// Get real-time attendance status for a course
+// Get real-time attendance status for a course
+export const getRealTimeAttendanceStatus = async (req, res, next) => {
+  const { courseId } = req.params;
+  const today = new Date().toISOString().split("T")[0]; // Current date (YYYY-MM-DD)
+
+  try {
+    // Step 1: Check if the course exists
+    const course = await Course.findById(courseId).populate("enrolledStudents", "name rollno");
+    if (!course) {
+      return next(errorHandler(404, "Course not found."));
+    }
+
+    // Step 2: Check if attendance record exists for today
+    const attendance = await Attendance.findOne({ courseId, date: today }).populate(
+      "students.studentId",
+      "name rollno"
+    );
+
+    if (!attendance) {
+      return res.status(404).json({
+        message: "No attendance record found for today.",
+        markedStudents: [],
+        pendingStudents: course.enrolledStudents, // All students are pending
+      });
+    }
+
+    // Step 3: Prepare the lists of marked and pending students
+    const markedStudents = attendance.students.map((record) => ({
+      studentId: record.studentId._id,
+      name: record.studentId.name,
+      rollno: record.studentId.rollno,
+      status: record.status,
+    }));
+
+     // Log the marked students for debugging
+     //console.log("Marked Students:", markedStudents);
+
+    // Create a set of marked student IDs for quick lookup
+    //const markedStudentIds = new Set(attendance.students.map((record) => record.studentId.toString()));
+    // Corrected line to ensure we're using only the student IDs (as strings)
+    const markedStudentIds = new Set(attendance.students.map((record) => record.studentId._id.toString()));
+
+    // Log the set of marked student IDs
+    //console.log("Marked Student IDs:", Array.from(markedStudentIds));
+    
+
+    // Step 4: Filter the course's enrolled students to find those who are not marked
+    const pendingStudents = course.enrolledStudents.filter(
+      (student) => !markedStudentIds.has(student._id.toString())
+    );
+
+    // Log the pending students for debugging
+    //console.log("Pending Students:", pendingStudents);
+
+    // Step 5: Return the real-time attendance data
+    res.status(200).json({
+      markedStudents,
+      pendingStudents,
+    });
+  } catch (error) {
+    console.error("Error fetching real-time attendance status:", error.message);
+    next(error);
+  }
+};

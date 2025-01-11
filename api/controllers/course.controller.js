@@ -111,6 +111,15 @@ export const getStudentCourses = async (req, res) => {
       return res.status(404).json({ message: 'Student not found' });
     }
 
+    if (student.courses.length === 0) {
+      return res.status(200).json({
+        studentName: student.name,
+        rollno: student.rollno,
+        email: student.email,
+        courses: [],  // Explicitly return an empty array for courses
+      });
+    }    
+
     // Prepare the courses list to send as a response
     const coursesList = student.courses.map((course) => ({
       courseID: course._id, // ObjectId for consistency
@@ -118,7 +127,9 @@ export const getStudentCourses = async (req, res) => {
       courseCode: course.code,
       description: course.description,
     }));
-
+    
+    //console.log('Courses List:', coursesList);
+    
     // Send the response with courses list
     res.status(200).json({
       studentName: student.name,

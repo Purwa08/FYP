@@ -6,7 +6,10 @@ import {
   getAttendanceRecords,
   getStudentsByCourse,
   getAttendanceByDate,
-  getAttendanceSummary
+  getAttendanceSummary,
+  isAttendanceWindowOpen,
+  markAttendanceByStudent,
+  getRealTimeAttendanceStatus
 } from '../controllers/attendance.controller.js';
 import { verifyToken } from '../utils/verifyUser.js'; // Assuming you have auth middleware
 
@@ -35,5 +38,16 @@ router.get('/course/:courseId/date/:date', verifyToken, getAttendanceByDate);
 // Route for fetching attendance summary of a student
 router.get('/student/:studentId', getAttendanceSummary);
 
+
+// Check if attendance window is open for a specific course
+router.get('/course/:courseId/window-status', isAttendanceWindowOpen);
+
+
+// Route for a student to mark their attendance
+router.post('/course/:courseId/student-mark-attendance', markAttendanceByStudent);
+
+
+// Route to get real-time attendance status for a course
+router.get("/course/:courseId/real-time-status", verifyToken, getRealTimeAttendanceStatus);
 
 export default router;

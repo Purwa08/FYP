@@ -220,13 +220,13 @@ const CourseDetails = () => {
       {
         label: "Present",
         data: attendanceStats.map((stat) => stat.present),
-        borderColor: "green",
+        borderColor: "#4caf50",
         fill: false,
       },
       {
         label: "Absent",
         data: attendanceStats.map((stat) => stat.absent),
-        borderColor: "red",
+        borderColor: "#f44336",
         fill: false,
       },
     ],
@@ -332,69 +332,72 @@ const CourseDetails = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-5">
-      <h1 className="text-4xl font-bold text-center mb-6">{course.name}</h1>
+    <div className="max-w-6xl mx-auto p-6 space-y-8">
+      {/* Course Details and Calendar in one box side by side */}
+      <div className="bg-white shadow-lg rounded-lg p-6 flex flex-col md:flex-row space-y-6 md:space-y-0">
+        {/* Course Details Section */}
+        <div className="md:w-1/2">
+          <h1 className="text-4xl text-[#432E54] font-bold">{course.name}</h1>
+          <p className="text-[#4B4376]">{course.code}</p>
+          <p className="text-[#AE445A] italic ">{course.description}</p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="space-y-3">
-          <h2 className="text-2xl font-semibold">Course Details</h2>
-          <p>
-            <strong>Code:</strong> {course.code}
-          </p>
-          <p className="text-gray-700">{course.description}</p>
-
-          <h3 className="text-lg font-semibold">Geofencing Parameters</h3>
-          <p>
-            <strong>Latitude:</strong> {course.geofence.latitude}
-          </p>
-          <p>
-            <strong>Longitude:</strong> {course.geofence.longitude}
-          </p>
-          <p>
-            <strong>Radius:</strong> {course.geofence.radius} meters
-          </p>
+          <div className="mt-6">
+            <h3 className="text-2xl text-[#432E54] font-semibold">
+              Geofencing Parameters
+            </h3>
+            <p className="text-[#608BC1]">
+              <strong>Latitude:</strong> {course.geofence.latitude}
+            </p>
+            <p className="text-[#608BC1]">
+              <strong>Longitude:</strong> {course.geofence.longitude}
+            </p>
+            <p className="text-[#608BC1]">
+              <strong>Radius:</strong> {course.geofence.radius} meters
+            </p>
+          </div>
         </div>
 
-        <div className="space-y-5">
-          <h2 className="text-2xl font-semibold">Attendance Statistics</h2>
-          {attendanceStats.length > 0 ? (
-            <Line data={attendanceChartData} options={attendanceChartOptions} />
-          ) : (
-            <p>No attendance data available.</p>
-          )}
+        {/* Calendar Section */}
+        <div className="md:w-1/2">
+          <h2 className="text-2xl text-[#432E54] font-semibold ">
+            Attendance Calendar
+          </h2>
+          <Calendar
+            tileClassName={tileClassName}
+            onClickDay={fetchAttendanceByDate}
+          />
+          <AttendanceModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)} // Closes the modal
+            attendanceData={attendanceData}
+            date={selectedDate}
+          />
         </div>
       </div>
 
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Calendar</h2>
-        <Calendar
-          tileClassName={tileClassName}
-          // onClickDay={(date) => {
-          //   setSelectedDate(date);
-          //   fetchAttendanceByDate(date);
-          // }}
-
-          onClickDay={fetchAttendanceByDate}
-        />
-
-        <AttendanceModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)} // Closes the modal
-          attendanceData={attendanceData}
-          date={selectedDate}
-        />
+      {/* Attendance Statistics Section */}
+      <div className="bg-white shadow-lg rounded-lg p-6">
+        <h2 className="text-2xl text-[#432E54] font-semibold mb-4">
+          Attendance Statistics
+        </h2>
+        {attendanceStats.length > 0 ? (
+          <Line data={attendanceChartData} options={attendanceChartOptions} />
+        ) : (
+          <p>No attendance data available.</p>
+        )}
       </div>
 
-      <div className="mb-8">
+      {/* Students List Section */}
+      <div className="bg-white shadow-lg rounded-lg p-6">
         <h2
-          className="text-2xl font-semibold flex items-center cursor-pointer"
+          className="text-2xl font-semibold cursor-pointer"
           onClick={() => setShowStudentList(!showStudentList)}
         >
           Students List
           {showStudentList ? (
-            <FaChevronUp className="ml-2" />
+            <FaChevronUp className="inline ml-2" />
           ) : (
-            <FaChevronDown className="ml-2" />
+            <FaChevronDown className="inline ml-2" />
           )}
         </h2>
         {showStudentList && (
@@ -402,40 +405,34 @@ const CourseDetails = () => {
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="border p-2">Roll No</th>
-                  <th className="border p-2">Name</th>
-                  <th className="border p-2">Attendance (%)</th>
+                  <th className="border p-3 text-left">Roll No</th>
+                  <th className="border p-3 text-left">Name</th>
+                  <th className="border p-3 text-left">Attendance (%)</th>
                 </tr>
               </thead>
               <tbody>
                 {students.map((student, index) => {
-                  const courseId = id; // Replace with the relevant course ID
                   const attendancePercentage =
-                    student.attendancePercentage[courseId] || 0; // Default to 0 if not found
-
+                    student.attendancePercentage[id] || 0;
                   const isLowAttendance = attendancePercentage < 75;
                   return (
                     <tr
                       key={index}
                       className={isLowAttendance ? "bg-red-100" : ""}
                     >
-                      <td className="border p-2 text-center">
-                        {student.rollno}
-                      </td>
-                      <td className="border p-2 text-center">{student.name}</td>
-                      <td className="border p-2 text-center">
-                        {attendancePercentage}%
-                      </td>
+                      <td className="border p-3">{student.rollno}</td>
+                      <td className="border p-3">{student.name}</td>
+                      <td className="border p-3">{attendancePercentage}%</td>
                     </tr>
                   );
-                })}
-              </tbody>
+})}
+</tbody>
             </table>
             {students.length > 0 && (
-              <div className="mt-4 flex justify-center">
+              <div className="mt-4 text-center">
                 <button
                   onClick={handleDownloadCSV}
-                  className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+                  className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700"
                 >
                   Download Student List
                 </button>
@@ -445,25 +442,19 @@ const CourseDetails = () => {
         )}
       </div>
 
-      <div className="flex justify-between mt-8">
+      <div className="flex justify-between space-x-4 mt-6">
         <button
           onClick={handleTakeAttendance}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          className="bg-[#006A67] text-white px-8 py-3 rounded-lg hover:bg-[#005E5B] focus:outline-none focus:ring-2 focus:ring-green-500 transition duration-300 ease-in-out transform hover:scale-105"
         >
           Take Attendance
         </button>
         <button
           onClick={handleAddStudent}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-[#003161] text-white px-8 py-3 rounded-lg hover:bg-[#002C50] focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 ease-in-out transform hover:scale-105"
         >
           Add Students
         </button>
-        {/* <button
-          onClick={handleDownloadCSV}
-          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
-        >
-          Download Student List
-        </button> */}
       </div>
     </div>
   );

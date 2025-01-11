@@ -1,6 +1,7 @@
 import { FaSearch } from 'react-icons/fa';
 import { Link} from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import logo from './VNIT_logo1.png';
 
 export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
@@ -8,7 +9,12 @@ export default function Header() {
   return (
     <header className='bg-slate-200 shadow-md'>
       <div className='flex justify-between items-center max-w-6xl mx-auto p-3'>
-        <Link to='/'>
+      <Link to="/" className="flex items-center gap-2">
+          <img
+            src={logo} // Logo image location
+            alt="Logo"
+            className="h-20 w-20 object-contain"
+          />
           <h1 className='font-bold text-sm sm:text-xl flex flex-wrap'>
             <span className='text-slate-500'>Attend</span>
             <span className='text-slate-700'>ify</span>

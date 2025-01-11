@@ -9,6 +9,7 @@ import studentRouter from './routes/student.route.js';
 import attendanceRouter from './routes/attendance.route.js';
 import studentauthRouter from './routes/studentauth.route.js';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 
 dotenv.config();
 
@@ -22,6 +23,16 @@ mongoose
   });
 
 const app=express();
+
+// CORS setup to allow specific origins and handle preflight requests
+const corsOptions = {
+  origin: ['http://localhost:8081', process.env.NGROK_URL], // Add ngrok URL dynamically from environment variables
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed methods
+  credentials: true, // Allow cookies if needed
+  allowedHeaders: ['Content-Type', 'ngrok-skip-browser-warning'],
+};
+
+app.use(cors(corsOptions)); // Use CORS middleware with options
 
 app.use(express.json())
 

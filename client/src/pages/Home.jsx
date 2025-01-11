@@ -193,10 +193,10 @@ export default function Home() {
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Your Courses</h1>
+        <h1 className="text-2xl text-[#432E54] font-bold">Your Courses</h1>
         <button
           onClick={handleAddCourse}
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+          className="bg-[#432E54] text-white px-4 py-2 rounded-lg hover:bg-[#3a243d]"
         >
           Add Course
         </button>
@@ -212,9 +212,9 @@ export default function Home() {
               className="bg-white p-4 shadow rounded-lg hover:shadow-md cursor-pointer transition"
               onClick={() => handleCourseClick(course._id)}
             >
-              <h2 className="text-xl font-semibold">{course.name}</h2>
-              <p className="text-gray-600 mt-2">{course.description}</p>
-              <p className="text-gray-400 text-sm mt-4">Course Code: {course.code}</p>
+              <h2 className="text-xl text-[#432E54] font-semibold">{course.name}</h2>
+              <p className="text-lg text-[#4B4376] mt-2">{course.description}</p>
+              <p className="text-sm text-[#AE445A] mt-4 italic">Course Code: {course.code}</p>
             </div>
           ))}
         </div>

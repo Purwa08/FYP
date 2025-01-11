@@ -147,3 +147,19 @@ export const handleFileUpload = async (req, res, next) => {
     next(error);
   }
 };
+
+
+export const getStudentCourseDetails = async (req, res, next) => {
+  try {
+    const courseId = req.params.courseId;
+    const course = await Course.findById(courseId).populate('facultyId');
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    res.status(200).json(course);
+  } catch (err) {
+    next(err);
+  }
+};
