@@ -3,6 +3,7 @@ import Course from '../models/course.model.js';
 import { generateRandomPassword } from '../utils/password.js';
 import XLSX from 'xlsx';
 import crypto from 'crypto'; // Import crypto module to generate random passwords
+import { errorHandler } from '../utils/error.js';
 
 // Function to generate a random password
 // const generateRandomPassword = (length = 8) => {
@@ -159,6 +160,44 @@ export const getStudentCourseDetails = async (req, res, next) => {
     }
 
     res.status(200).json(course);
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+
+// Controller to update student profile
+export const updateStudentProfile = async (req, res, next) => {
+  const { studentId } = req.params;
+  const { name, phone, profileImage, batch, branch, year, semester } = req.body;
+
+  try {
+    // Find the student by ID
+    const student = await Student.findById(studentId);
+
+    if (!student) {
+      return next(errorHandler(404, "Student not found."));
+    }
+
+    // Update fields only if provided
+    if (name) student.name = name;
+    if (phone) student.phone = phone;
+    if (profileImage) student.profileImage = profileImage;
+    if (batch) student.batch = batch;
+    if (branch) student.branch = branch;
+    if (year) student.year = year;
+    if (semester) student.semester = semester;
+
+    // Save the updated student
+    await student.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully.",
+      updatedProfile: student,
+    });
+
   } catch (err) {
     next(err);
   }
