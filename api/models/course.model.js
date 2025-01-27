@@ -43,19 +43,40 @@ const courseSchema = new mongoose.Schema(
       ref: 'User', 
       required: true,
     },
+    // geofence: {
+    //   // Example of how you can store geofencing parameters
+    //   latitude: {
+    //     type: Number,
+    //     required: true,
+    //   },
+    //   longitude: {
+    //     type: Number,
+    //     required: true,
+    //   },
+    //   radius: {
+    //     type: Number, // Radius in meters
+    //     required: true,
+    //   },
+    // },
     geofence: {
-      // Example of how you can store geofencing parameters
-      latitude: {
-        type: Number,
-        required: true,
+      circle: {
+        latitude: { type: Number, required: true },
+        longitude: { type: Number, required: true },
+        radius: { type: Number, required: true }, // Radius in meters
       },
-      longitude: {
-        type: Number,
-        required: true,
-      },
-      radius: {
-        type: Number, // Radius in meters
-        required: true,
+      polygon: {
+        type: {
+          coordinates: {
+            type: [[Number]], // Array of [latitude, longitude] pairs
+            validate: {
+              validator: function (v) {
+                return v.length >= 3; // A valid polygon must have at least 3 points
+              },
+              message: "Polygon must have at least 3 coordinates",
+            },
+          },
+          //required: false,
+        },
       },
     },
     enrolledStudents: [{

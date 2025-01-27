@@ -45,13 +45,26 @@ export const studentSignin = async (req, res, next) => {
             return next(errorHandler(401, 'Wrong credentials!'));
         }
 
+        // Device Binding Logic
+        // if (!validStudent.deviceId) {
+        //     // First login or no device bound
+        //     validStudent.deviceId = deviceId;
+        //     validStudent.deviceBoundAt = new Date();
+        //     await validStudent.save();
+        // } else if (validStudent.deviceId !== deviceId) {
+        //     // Device mismatch
+        //     return next(errorHandler(403, 'Access denied! This device is not authorized for this account.'));
+        // }
+
         const token = jwt.sign({ id: validStudent._id }, process.env.JWT_SECRET);
         const { password: pass, ...rest } = validStudent._doc;
         res
             .status(200)
-            .json({ token, student: rest,
+            .json({
+                token, student: rest,
                 firstLogin: isFirstLogin, // Include firstLogin field in the response
-                message: isFirstLogin ? "First time login, please reset your password" : "Login successful" }); // Return token and student data
+                message: isFirstLogin ? "First time login, please reset your password" : "Login successful"
+            }); // Return token and student data
     } catch (error) {
         next(error);
     }
@@ -86,7 +99,63 @@ export const resetPassword = async (req, res, next) => {
 
         console.log(student)
 
-        res.status(200).json({ success: true,message: 'Password reset successful. You can now log in with your new password.' });
+        res.status(200).json({ success: true, message: 'Password reset successful. You can now log in with your new password.' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+
+export const changePassword = async (req, res, next) => {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+    const { studentId } = req.params;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        return next(errorHandler(400, "Please provide all fields"));
+    }
+
+    if (newPassword !== confirmPassword) {
+        return next(errorHandler(400, "New passwords do not match"));
+    }
+
+    if (newPassword.length < 6) {
+        return next(errorHandler(400, "New password must be at least 6 characters long"));
+    }
+
+    try {
+        // Verify the JWT token to get the current logged-in student's ID
+        // const token = req.headers.authorization ? req.headers.authorization.split(' ')[1] : null;
+
+        // if (!token) {
+        //     return next(errorHandler(401, "Authorization token is missing"));
+        // }
+        // const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // // Ensure the studentId from the URL matches the ID in the token
+        // if (decoded.id !== studentId) {
+        //     return next(errorHandler(403, "You are not authorized to change this password"));
+        // }
+        const student = await Student.findById(studentId);
+
+        if (!student) {
+            return next(errorHandler(404, "Student not found"));
+        }
+
+        //const isMatch = await bcryptjs.compare(currentPassword, student.password);
+        const isMatch = student.password === currentPassword;
+
+        if (!isMatch) {
+            return next(errorHandler(401, "Current password is incorrect"));
+        }
+
+        //const hashedPassword = await bcryptjs.hash(newPassword, 10);
+
+        //student.password = hashedPassword;
+        student.password = newPassword;
+        await student.save();
+
+        res.status(200).json({ message: "Password changed successfully" });
     } catch (error) {
         next(error);
     }

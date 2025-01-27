@@ -346,14 +346,41 @@ const CourseDetails = () => {
               Geofencing Parameters
             </h3>
             <p className="text-[#608BC1]">
-              <strong>Latitude:</strong> {course.geofence.latitude}
+              <strong>Latitude:</strong> {course.geofence.circle.latitude}
             </p>
             <p className="text-[#608BC1]">
-              <strong>Longitude:</strong> {course.geofence.longitude}
+              <strong>Longitude:</strong> {course.geofence.circle.longitude}
             </p>
             <p className="text-[#608BC1]">
-              <strong>Radius:</strong> {course.geofence.radius} meters
+              <strong>Radius:</strong> {course.geofence.circle.radius} meters
             </p>
+            {/* <h3 className="text-2xl text-[#432E54] font-semibold">
+              Polygon geofence
+            </h3>
+            <p className="text-[#608BC1]">
+              <strong>Latitude:</strong> {course.geofence.polygon.coordinates[0][0]}
+            </p>
+            <p className="text-[#608BC1]">
+              <strong>Longitude:</strong> {course.geofence.polygon.coordinates[0][1]}
+            </p>
+            <p className="text-[#608BC1]">
+              <strong>Latitude:</strong> {course.geofence.polygon.coordinates[1][0]}
+            </p>
+            <p className="text-[#608BC1]">
+              <strong>Longitude:</strong> {course.geofence.polygon.coordinates[1][1]}
+            </p>
+            <p className="text-[#608BC1]">
+              <strong>Latitude:</strong> {course.geofence.polygon.coordinates[2][0]}
+            </p>
+            <p className="text-[#608BC1]">
+              <strong>Longitude:</strong> {course.geofence.polygon.coordinates[2][1]}
+            </p>
+            <p className="text-[#608BC1]">
+              <strong>Latitude:</strong> {course.geofence.polygon.coordinates[3][0]}
+            </p>
+            <p className="text-[#608BC1]">
+              <strong>Longitude:</strong> {course.geofence.polygon.coordinates[3][1]}
+            </p> */}
           </div>
         </div>
 

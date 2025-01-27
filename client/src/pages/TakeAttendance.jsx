@@ -181,7 +181,8 @@ const TakeAttendance = () => {
 
       setMarkedStudents(data.markedStudents || []);
       setPendingStudents(data.pendingStudents || []);
-      //setAttendanceWindowOpen(data.isWindowOpen); // Update the attendance window status
+
+      setAttendanceWindowOpen(data.isWindowOpen); // Update the attendance window status
 
       // Set course name (if part of the response)
       if (data.courseName) {

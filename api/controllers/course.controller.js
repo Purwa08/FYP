@@ -15,15 +15,42 @@ export const getCourses = async (req, res, next) => {
 };
 
 // Add a new course
+// export const addCourse = async (req, res, next) => {
+//   try {
+//     const { name, description, code, latitude, longitude, radius} = req.body;
+//     const facultyId = req.user.id; // Again, assuming req.user is available
+//     const newCourse = new Course({ name, description, code, facultyId, geofence: {
+//       latitude,
+//       longitude,
+//       radius,
+//     }, });
+
+//     await newCourse.save();
+//     res.status(201).json(newCourse);
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+
 export const addCourse = async (req, res, next) => {
   try {
-    const { name, description, code, latitude, longitude, radius} = req.body;
-    const facultyId = req.user.id; // Again, assuming req.user is available
-    const newCourse = new Course({ name, description, code, facultyId, geofence: {
-      latitude,
-      longitude,
-      radius,
-    }, });
+    const { name, description, code, circle, polygon } = req.body;
+
+    const facultyId = req.user.id; // Assuming `req.user` contains the authenticated user's details
+    const newCourse = new Course({
+      name,
+      description,
+      code,
+      facultyId,
+      geofence: {
+        circle: {
+          latitude: circle.latitude,
+          longitude: circle.longitude,
+          radius: circle.radius,
+        },
+        ...(polygon && { polygon: { coordinates: polygon.coordinates } }),
+      },
+    });
 
     await newCourse.save();
     res.status(201).json(newCourse);
@@ -31,6 +58,7 @@ export const addCourse = async (req, res, next) => {
     next(err);
   }
 };
+
 
 
 
