@@ -159,6 +159,8 @@ export const getStudentCourseDetails = async (req, res, next) => {
       return res.status(404).json({ message: 'Course not found' });
     }
 
+    //console.log("course details returned: ", course);
+
     res.status(200).json(course);
   } catch (err) {
     next(err);
