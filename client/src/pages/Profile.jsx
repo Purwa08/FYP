@@ -1,6 +1,5 @@
-import { useSelector } from 'react-redux';
-import {  useState } from 'react';
-
+import { useSelector, useDispatch } from 'react-redux';
+import { useState, useEffect } from 'react';
 import {
   updateUserStart,
   updateUserSuccess,
@@ -10,14 +9,37 @@ import {
   deleteUserSuccess,
   signOutUserStart,
 } from '../redux/user/userSlice';
-import { useDispatch } from 'react-redux';
-// import { Link } from 'react-router-dom';
+
 export default function Profile() {
   const { currentUser, loading, error } = useSelector((state) => state.user);
-  const [formData, setFormData] = useState({});
-  const [updateSuccess, setUpdateSuccess] = useState(false);
   const dispatch = useDispatch();
 
+  // Initialize form data with current user info
+  const [formData, setFormData] = useState({
+    username: currentUser?.username || '',
+    email: currentUser?.email || '',
+    firstName: currentUser?.firstName || '',
+    lastName: currentUser?.lastName || '',
+    department: currentUser?.department || '',
+    phone: currentUser?.phone || '',
+    password: '', // leave password empty if not updating
+  });
+  const [updateSuccess, setUpdateSuccess] = useState(false);
+
+  // If currentUser changes, update the formData state
+  useEffect(() => {
+    if (currentUser) {
+      setFormData({
+        username: currentUser.username,
+        email: currentUser.email,
+        firstName: currentUser.firstName || '',
+        lastName: currentUser.lastName || '',
+        department: currentUser.department || '',
+        phone: currentUser.phone || '',
+        password: '',
+      });
+    }
+  }, [currentUser]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -39,7 +61,6 @@ export default function Profile() {
         dispatch(updateUserFailure(data.message));
         return;
       }
-
       dispatch(updateUserSuccess(data));
       setUpdateSuccess(true);
     } catch (error) {
@@ -79,63 +100,124 @@ export default function Profile() {
     }
   };
 
-  
   return (
-    <div className='p-3 max-w-lg mx-auto'>
-      <h1 className='text-3xl font-semibold text-center my-7'>Profile</h1>
-      <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
+    <div className="p-3 max-w-lg mx-auto">
+      <h1 className="text-3xl font-semibold text-center my-7">Profile</h1>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <img
           src={currentUser.avatar}
-          alt='profile'
-          className='rounded-full h-24 w-24 object-cover cursor-pointer self-center mt-2'
+          alt="profile"
+          className="rounded-full h-24 w-24 object-cover cursor-pointer self-center mt-2"
         />
-        
+        <div className="flex flex-col">
+    <span className="text-sm text-gray-600 mb-1">
+      Username
+    </span>
         <input
-          type='text'
-          placeholder='username'
-          defaultValue={currentUser.username}
-          id='username'
-          className='border p-3 rounded-lg'
+          type="text"
+          placeholder="Username"
+          id="username"
+          value={formData.username}
+          className="border p-3 rounded-lg"
           onChange={handleChange}
         />
+        </div>
+        <div className="flex flex-col">
+    <span className="text-sm text-gray-600 mb-1">
+      Email
+    </span>
+    </div>
         <input
-          type='email'
-          placeholder='email'
-          id='email'
-          defaultValue={currentUser.email}
-          className='border p-3 rounded-lg'
+          type="email"
+          placeholder="Email"
+          id="email"
+          value={formData.email}
+          className="border p-3 rounded-lg"
           onChange={handleChange}
         />
+        <div className="flex flex-col">
+    <span className="text-sm text-gray-600 mb-1">
+      First Name
+    </span>
         <input
-          type='password'
-          placeholder='password'
+          type="text"
+          placeholder="First Name"
+          id="firstName"
+          value={formData.firstName}
+          className="border p-3 rounded-lg"
           onChange={handleChange}
-          id='password'
-          className='border p-3 rounded-lg'
         />
+        </div>
+        <div className="flex flex-col">
+    <span className="text-sm text-gray-600 mb-1">
+      Last Name
+    </span>
+        <input
+          type="text"
+          placeholder="Last Name"
+          id="lastName"
+          value={formData.lastName}
+          className="border p-3 rounded-lg"
+          onChange={handleChange}
+        />
+        </div>
+        <div className="flex flex-col">
+    <span className="text-sm text-gray-600 mb-1">
+      Current Department: {currentUser.department || 'N/A'}
+    </span>
+        <input
+          type="text"
+          placeholder="Department"
+          id="department"
+          value={formData.department}
+          className="border p-3 rounded-lg"
+          onChange={handleChange}
+        />
+        </div>
+        <div className="flex flex-col">
+    <span className="text-sm text-gray-600 mb-1">
+      Phone Number
+    </span>
+        <input
+          type="text"
+          placeholder="Phone"
+          id="phone"
+          value={formData.phone}
+          className="border p-3 rounded-lg"
+          onChange={handleChange}
+        />
+        </div>
+        <div className="flex flex-col">
+    <span className="text-sm text-gray-600 mb-1">
+      Password
+    </span>
+        <input
+          type="password"
+          placeholder="Password (leave blank to keep unchanged)"
+          id="password"
+          className="border p-3 rounded-lg"
+          onChange={handleChange}
+        />
+        </div>
         <button
           disabled={loading}
-          className='bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95 disabled:opacity-80'
+          className="bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95 disabled:opacity-80"
         >
           {loading ? 'Loading...' : 'Update'}
         </button>
-        
       </form>
-      <div className='flex justify-between mt-5'>
-        <span
-          onClick={handleDeleteUser}
-          className='text-red-700 cursor-pointer'
-        >
+      <div className="flex justify-between mt-5">
+        <span onClick={handleDeleteUser} className="text-red-700 cursor-pointer">
           Delete account
         </span>
-        <span onClick={handleSignOut} className='text-red-700 cursor-pointer'>
+        <span onClick={handleSignOut} className="text-red-700 cursor-pointer">
           Sign out
         </span>
       </div>
-      <p className='text-red-700 mt-5'>{error ? error : ''}</p>
-      <p className='text-green-700 mt-5'>
-        {updateSuccess ? 'User is updated successfully!' : ''}
-      </p>
+      {error && <p className="text-red-700 mt-5">{error}</p>}
+      {updateSuccess && (
+        <p className="text-green-700 mt-5">User is updated successfully!</p>
+      )}
     </div>
   );
 }

@@ -98,6 +98,22 @@
 
 // export default CourseDetails;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//old one dont delete
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Line } from "react-chartjs-2";
@@ -184,6 +200,10 @@ const CourseDetails = () => {
   };
   const handleAddStudent = () => {
     navigate(`/add-student/${id}`);
+  };
+
+  const handleUpdateCourse = () => {
+    navigate(`/update-course/${id}`, { state: { course } });
   };
 
 
@@ -481,6 +501,12 @@ const CourseDetails = () => {
           className="bg-[#003161] text-white px-8 py-3 rounded-lg hover:bg-[#002C50] focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 ease-in-out transform hover:scale-105"
         >
           Add Students
+        </button>
+        <button
+          onClick={handleUpdateCourse}
+          className="bg-[#5A189A] text-white px-8 py-3 rounded-lg hover:bg-[#3C096C] focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300 ease-in-out transform hover:scale-105"
+        >
+          Update Course
         </button>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import express from 'express';
-import { getCourses, addCourse, getCourseDetails, downloadStudentList, getStudentCourses} from '../controllers/course.controller.js';
+import { getCourses, addCourse, getCourseDetails, downloadStudentList, getStudentCourses, updateCourse} from '../controllers/course.controller.js';
 import { addStudentToCourse, handleFileUpload } from '../controllers/student.controller.js';
 import { verifyToken } from '../utils/verifyUser.js';
 import upload from '../middlewares/upload.js';
@@ -12,6 +12,9 @@ router.get('/getcourses', verifyToken, getCourses);
 
 // Route to add a new course
 router.post('/addcourse', verifyToken, addCourse);
+
+// Route for updating a course
+router.post('/update-course/:id', verifyToken, updateCourse);
 
 // Route to get course details by ID
 router.get('/course/:id', verifyToken, getCourseDetails);

@@ -28,7 +28,7 @@ const studentSchema = new mongoose.Schema(
       default: true
     },
     rollno: {
-      type: String,
+      type: String, 
       required: true,
       unique: true
     },
@@ -66,7 +66,7 @@ const studentSchema = new mongoose.Schema(
       },
       status: {
         type: String,
-        enum: ['present', 'absent', 'late'], // Track attendance status
+        enum: ['present', 'absent'], // Track attendance status
         required: true,
       },
       courseId: {

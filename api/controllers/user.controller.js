@@ -12,20 +12,22 @@ export const updateUser = async (req, res, next) => {
   if (req.user.id !== req.params.id)
     return next(errorHandler(401, 'You can only update your own account!'));
   try {
-    if (req.body.password) {
-      req.body.password = bcryptjs.hashSync(req.body.password, 10);
+    const updateFields = {
+      username: req.body.username,
+      email: req.body.email,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      department: req.body.department,
+      phone: req.body.phone,
+    };
+
+    if (req.body.password && req.body.password.trim() !== "") {
+      updateFields.password = bcryptjs.hashSync(req.body.password, 10);
     }
 
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
-      {
-        $set: {
-          username: req.body.username,
-          email: req.body.email,
-          password: req.body.password,
-          
-        },
-      },
+      { $set: updateFields },
       { new: true }
     );
 
@@ -36,6 +38,7 @@ export const updateUser = async (req, res, next) => {
     next(error);
   }
 };
+
 
 
 export const deleteUser = async (req, res, next) => {

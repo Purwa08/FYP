@@ -4,41 +4,165 @@ import Student from '../models/student.model.js';
 import { errorHandler } from '../utils/error.js';
 
 
-// Start attendance window for a course on a specific date
+// // Start attendance window for a course on a specific date(old one)
+// export const startAttendance = async (req, res, next) => {
+//   const { courseId } = req.params;
+//   try {
+//     const course = await Course.findById(courseId);
+//     if (!course || course.facultyId.toString() !== req.user.id) {
+//       return next(errorHandler(403, 'You are not authorized to start attendance for this course.'));
+//     }
+
+//     const today = new Date().toISOString().split('T')[0]; // Get current date (YYYY-MM-DD)
+//     let attendance = await Attendance.findOne({ courseId, date: today });
+
+//     if (attendance && attendance.isWindowOpen) {
+//       return next(errorHandler(400, 'Attendance window is already open.'));
+//     }
+
+//     if (!attendance) {
+//       attendance = new Attendance({
+//         courseId,
+//         date: today,
+//         students: [], // Students will be populated when they mark attendance
+//         isWindowOpen: true,
+//       });
+
+//       // Increment totalClassesHeld since this is a new class
+//       course.totalClassesHeld = (course.totalClassesHeld || 0) + 1;
+
+//       // Optionally update attendanceStats for per-day tracking (if still needed)
+//       course.attendanceStats.push({
+//         date: today,
+//         present: 0,
+//         absent: course.enrolledStudents.length, // Initially all absent
+//         totalClassesHeld: course.totalClassesHeld,
+//         attendancePercentage: 0, // Will update as students mark present
+//       });
+
+//     } else {
+//       attendance.isWindowOpen = true;
+//     }
+
+//     await attendance.save();
+
+//     // Sync absences for all enrolled students
+//     for (const student of course.enrolledStudents) {
+//       const studentId = student._id.toString();
+//       const studentRecord = await Student.findById(studentId);
+
+//       const existingRecord = studentRecord.attendance.find(
+//         (record) =>
+//           record.date.toISOString().split("T")[0] === today &&
+//           record.courseId.toString() === courseId
+//       );
+
+//       // If no record exists for this date and course, mark as absent
+//       if (!existingRecord) {
+//         studentRecord.attendance.push({
+//           date: today,
+//           courseId,
+//           status: "absent", // Default to absent until marked present
+//         });
+//       }
+
+//       // Recalculate attendance percentage
+//       const totalPresent = studentRecord.attendance.filter(
+//         (record) => record.courseId.toString() === courseId && record.status === "present"
+//       ).length;
+//       const attendancePercentage = (
+//         (totalPresent / course.totalClassesHeld) * 100
+//       ).toFixed(2);
+//       studentRecord.attendancePercentage.set(courseId, attendancePercentage);
+
+//       await studentRecord.save();
+//     }
+
+//     // Save the updated course (totalClassesHeld and attendanceStats)
+//     await course.save();
+
+//     res.status(200).json({ message: 'Attendance window opened successfully.', attendance });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+//updated one
 export const startAttendance = async (req, res, next) => {
   const { courseId } = req.params;
   try {
-    const course = await Course.findById(courseId);
+    const course = await Course.findById(courseId).populate("enrolledStudents");
     if (!course || course.facultyId.toString() !== req.user.id) {
-      return next(errorHandler(403, 'You are not authorized to start attendance for this course.'));
+      return next(errorHandler(403, "You are not authorized to start attendance for this course."));
     }
 
-    const today = new Date().toISOString().split('T')[0]; // Get current date (YYYY-MM-DD)
+    const today = new Date().toISOString().split("T")[0];
     let attendance = await Attendance.findOne({ courseId, date: today });
 
     if (attendance && attendance.isWindowOpen) {
-      return next(errorHandler(400, 'Attendance window is already open.'));
+      return next(errorHandler(400, "Attendance window is already open."));
     }
 
     if (!attendance) {
       attendance = new Attendance({
         courseId,
         date: today,
-        students: [], // Students will be populated when they mark attendance
+        students: [],
         isWindowOpen: true,
+      });
+
+      course.totalClassesHeld = (course.totalClassesHeld || 0) + 1;
+      course.attendanceStats.push({
+        date: today,
+        present: 0,
+        absent: course.enrolledStudents.length,
+        totalClassesHeld: course.totalClassesHeld,
+        attendancePercentage: 0,
       });
     } else {
       attendance.isWindowOpen = true;
     }
 
     await attendance.save();
-    res.status(200).json({ message: 'Attendance window opened successfully.', attendance });
+
+    // Sync absences for all enrolled students
+    for (const student of course.enrolledStudents) {
+      const studentId = student._id.toString();
+      const studentRecord = await Student.findById(studentId);
+
+      const existingRecord = studentRecord.attendance.find(
+        (record) =>
+          record.date.toISOString().split("T")[0] === today &&
+          record.courseId.toString() === courseId
+      );
+
+      if (!existingRecord) {
+        studentRecord.attendance.push({
+          date: today,
+          courseId,
+          status: "absent",
+        });
+        // Set initial percentage to 0 since no one is present yet
+        //studentRecord.attendancePercentage.set(courseId, 0);
+
+        // Recalculate attendance percentage
+    const totalPresentForCourse = studentRecord.attendance.filter(
+      (record) => record.courseId.toString() === courseId && record.status === "present"
+    ).length;
+    const attendancePercentage = ((totalPresentForCourse / course.totalClassesHeld) * 100).toFixed(2);
+    studentRecord.attendancePercentage.set(courseId, attendancePercentage);
+    
+        await studentRecord.save();
+      }
+    }
+
+    await course.save(); // Save course updates
+
+    res.status(200).json({ message: "Attendance window opened successfully.", attendance });
   } catch (error) {
     next(error);
   }
 };
-
-
 
 
 // Close attendance window for a course on a specific date
@@ -305,16 +429,77 @@ export const getAttendanceByDate = async (req, res) => {
 
 
 
+//old one
+// export const getAttendanceSummary = async (req, res, next) => {
+//   const { studentId } = req.params;
 
+//   try {
+//     // Find the student and populate courses
+//     const student = await Student.findById(studentId).populate('courses');
+
+//     if (!student) {
+//       return res.status(404).json({ message: 'Student not found' });
+//     }
+ 
+//     // Generate attendance summary for each course
+//     const attendanceSummary = student.courses.map((course) => {
+//       const courseId = course._id.toString();
+//       const courseAttendanceRecords = student.attendance.filter(
+//         (record) => record.courseId.toString() === courseId
+//       );
+
+//       // Count sessions attended and missed
+//       const totalSessions = courseAttendanceRecords.length;
+//       const attendedSessions = courseAttendanceRecords.filter(
+//         (record) => record.status === 'present'
+//       ).length;
+//       const missedSessions = courseAttendanceRecords.filter(
+//         (record) => record.status === 'absent'
+//       ).length;
+
+//       return {
+//         courseID: course._id,
+//         courseName: course.name,
+//         courseCode: course.code,
+//         description: course.description,
+//         attendancePercentage: student.attendancePercentage.get(courseId) || 0,
+//         totalSessions,
+//         attendedSessions,
+//         missedSessions,
+//         attendanceRecords: courseAttendanceRecords.map((record) => ({
+//           date: record.date,
+//           status: record.status,
+//         })),
+//       };
+//     });
+
+//     // Send response with student details and attendance summary
+//     res.status(200).json({
+//       studentName: student.name,
+//       rollno: student.rollno,
+//       email: student.email,
+//       attendanceSummary,
+//     });
+//   } catch (error) {
+//     console.error('Error fetching attendance summary:', error.message);
+//     next(error); // Pass error to the Express error handler
+//   }
+// };
+
+
+//new one by grok
 export const getAttendanceSummary = async (req, res, next) => {
   const { studentId } = req.params;
 
   try {
     // Find the student and populate courses
-    const student = await Student.findById(studentId).populate('courses');
+    const student = await Student.findById(studentId).populate({
+      path: "courses",
+      select: "name code description totalClassesHeld", // Include totalClassesHeld
+    });
 
     if (!student) {
-      return res.status(404).json({ message: 'Student not found' });
+      return res.status(404).json({ message: "Student not found" });
     }
 
     // Generate attendance summary for each course
@@ -324,21 +509,26 @@ export const getAttendanceSummary = async (req, res, next) => {
         (record) => record.courseId.toString() === courseId
       );
 
-      // Count sessions attended and missed
-      const totalSessions = courseAttendanceRecords.length;
+      // Use Course.totalClassesHeld as the total number of sessions
+      const totalSessions = course.totalClassesHeld || 0;
+
+      // Count sessions attended and missed from student's attendance records
       const attendedSessions = courseAttendanceRecords.filter(
-        (record) => record.status === 'present'
+        (record) => record.status === "present"
       ).length;
       const missedSessions = courseAttendanceRecords.filter(
-        (record) => record.status === 'absent'
+        (record) => record.status === "absent"
       ).length;
+
+      // Use the precomputed attendancePercentage from the Student model
+      const attendancePercentage = student.attendancePercentage.get(courseId) || 0;
 
       return {
         courseID: course._id,
         courseName: course.name,
         courseCode: course.code,
         description: course.description,
-        attendancePercentage: student.attendancePercentage.get(courseId) || 0,
+        attendancePercentage: parseFloat(attendancePercentage), // Ensure it’s a number
         totalSessions,
         attendedSessions,
         missedSessions,
@@ -357,7 +547,7 @@ export const getAttendanceSummary = async (req, res, next) => {
       attendanceSummary,
     });
   } catch (error) {
-    console.error('Error fetching attendance summary:', error.message);
+    console.error("Error fetching attendance summary:", error.message);
     next(error); // Pass error to the Express error handler
   }
 };
@@ -402,81 +592,182 @@ export const isAttendanceWindowOpen = async (req, res, next) => {
 };
 
 
-
+//old one imp
 // Controller for students to mark their attendance
+// export const markAttendanceByStudent = async (req, res, next) => {
+//   const { courseId } = req.params;
+//   const { studentId } = req.body; // Student ID passed in the request body (can also come from token)
+//   const today = new Date().toISOString().split("T")[0]; // Current date in YYYY-MM-DD format
+
+//   try {
+//     // Step 1: Check if the course exists
+//     const course = await Course.findById(courseId);
+//     if (!course) {
+//       return next(errorHandler(404, "Course not found."));
+//     }
+
+//     // Step 2: Check if the student is enrolled in the course
+//     const isEnrolled = course.enrolledStudents.some(
+//       (id) => id.toString() === studentId
+//     );
+//     if (!isEnrolled) {
+//       return next(errorHandler(403, "You are not enrolled in this course."));
+//     }
+
+//     // Step 3: Check if attendance window is open for the course today
+//     let attendance = await Attendance.findOne({ courseId, date: today });
+//     if (!attendance || !attendance.isWindowOpen) {
+//       return next(errorHandler(400, "Attendance window is closed."));
+//     }
+
+//     // Step 4: Check if the student has already marked attendance for today
+//     const alreadyMarked = attendance.students.some(
+//       (record) => record.studentId.toString() === studentId && record.status==="present"
+//     );
+//     if (alreadyMarked) {
+//       return next(errorHandler(400, "You have already marked attendance."));
+//     }
+
+//     // Step 5: Mark the student as present
+//     attendance.students.push({
+//       studentId,
+//       status: "present",
+//     });
+//     await attendance.save();
+
+//     //step course model update
+//     // Update the course model attendance stats
+//     const existingStat = course.attendanceStats.find(
+//       (stat) => stat.date.toISOString().split('T')[0] === today
+//     );
+
+//     if (existingStat) {
+//       // Update existing stats for the date
+//        existingStat.present += 1;
+//        existingStat.attendancePercentage = ((existingStat.present/existingStat.totalClassesHeld)*100).toFixed(2);
+      
+//     } else {
+//       // Create new stats entry for the date
+//       course.totalClassesHeld += 1;
+//       const totalClassesHeld =course.totalClassesHeld;
+//       // const totalClassesHeld = course.attendanceStats.length
+//       //   ? course.attendanceStats[course.attendanceStats.length - 1].totalClassesHeld + 1
+//       //   : 1;
+//       const presentCount = 1;
+//       const absentCount=0;
+//       //const presentCount = status === 'present' ? 1 : 0;
+//       //const absentCount = status === 'absent' ? 1 : 0;
+//       const attendancePercentage = ((presentCount / totalClassesHeld) * 100).toFixed(2);
+
+//       course.attendanceStats.push({
+//         date: today,
+//         present: presentCount,
+//         absent: absentCount,
+//         totalClassesHeld,
+//         attendancePercentage,
+//       });
+//     }
+//     await course.save();
+
+//     // Step 6: Update the student's attendance record
+//     const student = await Student.findById(studentId);
+//     const existingRecord = student.attendance.find(
+//       (record) =>
+//         record.date.toISOString().split("T")[0] === today &&
+//         record.courseId.toString() === courseId
+//     );
+
+//     if (!existingRecord) {
+//       student.attendance.push({
+//         date: today,
+//         courseId,
+//         status: "present",
+//       });
+//     }
+//     else {
+//       // Update existing attendance entry
+//       existingRecord.status = "present";
+//     }
+
+//     // Step 7: Update the student's attendance percentage for the course
+//     // const totalAttendanceForCourse = student.attendance.filter(
+//     //   (record) => record.courseId.toString() === courseId
+//     // ).length;
+
+//     // const totalPresentForCourse = student.attendance.filter(
+//     //   (record) =>
+//     //     record.courseId.toString() === courseId && record.status === "present"
+//     // ).length;
+
+//     // const attendancePercentage = (
+//     //   (totalPresentForCourse / totalAttendanceForCourse) *
+//     //   100
+//     // ).toFixed(2);
+
+//     // student.attendancePercentage.set(courseId, attendancePercentage);
+//     // await student.save();
+
+//     // Recalculate attendance percentage
+//     const totalPresentForCourse = student.attendance.filter(
+//       (record) => record.courseId.toString() === courseId && record.status === "present"
+//     ).length;
+//     const attendancePercentage = ((totalPresentForCourse / course.totalClassesHeld) * 100).toFixed(2);
+//     student.attendancePercentage.set(courseId, attendancePercentage);
+//     await student.save();
+
+//     res
+//       .status(200)
+//       .json({ message: "Attendance marked successfully.", attendance });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+//new updated one by grok
 export const markAttendanceByStudent = async (req, res, next) => {
   const { courseId } = req.params;
-  const { studentId } = req.body; // Student ID passed in the request body (can also come from token)
-  const today = new Date().toISOString().split("T")[0]; // Current date in YYYY-MM-DD format
+  const { studentId } = req.body;
+  const today = new Date().toISOString().split("T")[0];
 
   try {
-    // Step 1: Check if the course exists
     const course = await Course.findById(courseId);
     if (!course) {
       return next(errorHandler(404, "Course not found."));
     }
 
-    // Step 2: Check if the student is enrolled in the course
-    const isEnrolled = course.enrolledStudents.some(
-      (id) => id.toString() === studentId
-    );
+    const isEnrolled = course.enrolledStudents.some((id) => id.toString() === studentId);
     if (!isEnrolled) {
       return next(errorHandler(403, "You are not enrolled in this course."));
     }
 
-    // Step 3: Check if attendance window is open for the course today
     let attendance = await Attendance.findOne({ courseId, date: today });
     if (!attendance || !attendance.isWindowOpen) {
       return next(errorHandler(400, "Attendance window is closed."));
     }
 
-    // Step 4: Check if the student has already marked attendance for today
     const alreadyMarked = attendance.students.some(
-      (record) => record.studentId.toString() === studentId
+      (record) => record.studentId.toString() === studentId && record.status === "present"
     );
     if (alreadyMarked) {
       return next(errorHandler(400, "You have already marked attendance."));
     }
 
-    // Step 5: Mark the student as present
-    attendance.students.push({
-      studentId,
-      status: "present",
-    });
+    attendance.students.push({ studentId, status: "present" });
     await attendance.save();
 
-    //step course model update
-    // Update the course model attendance stats
+    // Update course attendance stats
     const existingStat = course.attendanceStats.find(
-      (stat) => stat.date.toISOString().split('T')[0] === today
+      (stat) => stat.date.toISOString().split("T")[0] === today
     );
-
     if (existingStat) {
-      // Update existing stats for the date
-       existingStat.present += 1;
-      
-    } else {
-      // Create new stats entry for the date
-      const totalClassesHeld = course.attendanceStats.length
-        ? course.attendanceStats[course.attendanceStats.length - 1].totalClassesHeld + 1
-        : 1;
-      const presentCount = 1;
-      const absentCount=0;
-      //const presentCount = status === 'present' ? 1 : 0;
-      //const absentCount = status === 'absent' ? 1 : 0;
-      const attendancePercentage = ((presentCount / totalClassesHeld) * 100).toFixed(2);
+      existingStat.present += 1;
+      existingStat.absent -= 1; // Reflect one less absent student
+      // Use course.totalClassesHeld for consistency, though this stat might not be student-specific
+      existingStat.attendancePercentage = ((existingStat.present / course.totalClassesHeld) * 100).toFixed(2);
+      await course.save();
+    } // No else block needed—new stats should only be added in startAttendance
 
-      course.attendanceStats.push({
-        date: today,
-        present: presentCount,
-        absent: absentCount,
-        totalClassesHeld,
-        attendancePercentage,
-      });
-    }
-    await course.save();
-
-    // Step 6: Update the student's attendance record
+    // Update student's attendance record
     const student = await Student.findById(studentId);
     const existingRecord = student.attendance.find(
       (record) =>
@@ -485,44 +776,24 @@ export const markAttendanceByStudent = async (req, res, next) => {
     );
 
     if (!existingRecord) {
-      student.attendance.push({
-        date: today,
-        courseId,
-        status: "present",
-      });
-    }
-    else {
-      // Update existing attendance entry
+      student.attendance.push({ date: today, courseId, status: "present" });
+    } else {
       existingRecord.status = "present";
     }
 
-    // Step 7: Update the student's attendance percentage for the course
-    const totalAttendanceForCourse = student.attendance.filter(
-      (record) => record.courseId.toString() === courseId
-    ).length;
-
+    // Recalculate attendance percentage
     const totalPresentForCourse = student.attendance.filter(
-      (record) =>
-        record.courseId.toString() === courseId && record.status === "present"
+      (record) => record.courseId.toString() === courseId && record.status === "present"
     ).length;
-
-    const attendancePercentage = (
-      (totalPresentForCourse / totalAttendanceForCourse) *
-      100
-    ).toFixed(2);
-
+    const attendancePercentage = ((totalPresentForCourse / course.totalClassesHeld) * 100).toFixed(2);
     student.attendancePercentage.set(courseId, attendancePercentage);
     await student.save();
 
-    res
-      .status(200)
-      .json({ message: "Attendance marked successfully.", attendance });
+    res.status(200).json({ message: "Attendance marked successfully.", attendance });
   } catch (error) {
     next(error);
   }
 };
-
-
 
 // Get real-time attendance status for a course
 // Get real-time attendance status for a course

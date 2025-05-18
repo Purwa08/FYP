@@ -18,7 +18,7 @@ const AttendanceStatSchema = new mongoose.Schema({
     default: 0 
   },
   attendancePercentage: { 
-    type: Number, 
+    type: Number,  
     default: 0 
   },
 });
@@ -83,7 +83,13 @@ const courseSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Student',
     }],
-    attendanceStats: [AttendanceStatSchema]
+
+    attendanceStats: [AttendanceStatSchema],
+
+    totalClassesHeld: { 
+      type: Number, 
+      default: 0 
+    },
   },
   
   {

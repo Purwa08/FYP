@@ -16,7 +16,13 @@ export const studentSignup = async (req, res, next) => {
 };
 
 export const studentSignin = async (req, res, next) => {
-    const { email, password } = req.body;
+    const { email, password , deviceId } = req.body;
+
+     // Ensure deviceId is provided
+     if (!deviceId) {
+        return next(errorHandler(400, 'Device ID is required.'));
+    }
+
     try {
         const validStudent = await Student.findOne({ email });
         if (!validStudent) return next(errorHandler(404, 'Student not found!'));
@@ -45,16 +51,22 @@ export const studentSignin = async (req, res, next) => {
             return next(errorHandler(401, 'Wrong credentials!'));
         }
 
-        // Device Binding Logic
-        // if (!validStudent.deviceId) {
-        //     // First login or no device bound
-        //     validStudent.deviceId = deviceId;
-        //     validStudent.deviceBoundAt = new Date();
-        //     await validStudent.save();
-        // } else if (validStudent.deviceId !== deviceId) {
-        //     // Device mismatch
-        //     return next(errorHandler(403, 'Access denied! This device is not authorized for this account.'));
-        // }
+         // Device Binding Logic:
+         if (!validStudent.deviceId) {
+            // If no device is bound, bind this device (for first login or if somehow unbound)
+            validStudent.deviceId = deviceId;
+            validStudent.deviceBoundAt = new Date();
+
+            // Optionally update the firstLogin flag if the flow requires a password reset only on the first login
+            // if (isFirstLogin) {
+            //     validStudent.firstLogin = false;
+            // }
+
+            await validStudent.save();
+        } else if (validStudent.deviceId !== deviceId) {
+            // If device is already bound and the incoming deviceId doesn't match, deny access
+            return next(errorHandler(403, 'Access denied! This device is not authorized for this account.'));
+        }
 
         const token = jwt.sign({ id: validStudent._id }, process.env.JWT_SECRET);
         const { password: pass, ...rest } = validStudent._doc;

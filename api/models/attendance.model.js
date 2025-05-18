@@ -7,7 +7,7 @@ const AttendanceSchema = new mongoose.Schema({
     ref: 'Course', 
     required: true },
 
-  date: { 
+  date: {  
     type: Date, 
     required: true },
 
@@ -20,13 +20,14 @@ const AttendanceSchema = new mongoose.Schema({
       status: { 
         type: String, 
         enum: ['present', 'absent'], 
+        default: 'absent',
         required: true },
     },
   ],
   isWindowOpen: { // Flag to indicate if the attendance window is open
     type: Boolean,
     default: false
-  }
+  },
 });
 
 

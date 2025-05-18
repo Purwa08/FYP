@@ -61,6 +61,52 @@ export const addCourse = async (req, res, next) => {
 
 
 
+import { errorHandler } from '../utils/error.js'; // Adjust path accordingly
+
+export const updateCourse = async (req, res, next) => {
+  try {
+    // Find the course by id
+    const course = await Course.findById(req.params.id);
+    if (!course) {
+      return next(errorHandler(404, 'Course not found'));
+    }
+    
+    // Check if the current user is the owner (faculty) of the course
+    if (course.facultyId.toString() !== req.user.id) {
+      return next(errorHandler(401, 'You are not authorized to update this course'));
+    }
+    
+    // Extract fields from the request body
+    const { name, description, code, geofence, enrolledStudents } = req.body;
+    
+    // Build the update object
+    const updateFields = {};
+    if (name) updateFields.name = name;
+    if (description) updateFields.description = description;
+    if (code) updateFields.code = code;
+    if (geofence) {
+      updateFields.geofence = geofence;
+      // Ensure geofence structure follows your model, e.g.,
+      // {
+      //   circle: { latitude: Number, longitude: Number, radius: Number },
+      //   polygon: { coordinates: [[Number]] }
+      // }
+    }
+    if (enrolledStudents) updateFields.enrolledStudents = enrolledStudents;
+    
+    // Update the course and return the new document
+    const updatedCourse = await Course.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateFields },
+      { new: true }
+    );
+    
+    res.status(200).json({ success: true, course: updatedCourse });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 
 // Get course details by ID

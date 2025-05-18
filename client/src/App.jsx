@@ -11,6 +11,7 @@ import CourseDetails from './pages/CourseDetails';
 import PrivateRoute from './components/PrivateRoute';
 import TakeAttendance from './pages/TakeAttendance';
 import AddStudentPage from './pages/AddSudent';
+import UpdateCoursePage from './pages/UpdateCourse';
 
 export default function App() {
     return (
@@ -36,6 +37,8 @@ export default function App() {
           <Route path="/take-attendance/:id" element={<TakeAttendance />} />
 
           <Route path="/add-student/:id" element={<AddStudentPage/>} />
+
+          <Route path='/update-course/:id' element={<UpdateCoursePage/>}/>
 
           </Route>
           
